@@ -1,0 +1,9 @@
+*.png
+*.gif
+*.pdf
+*.ini
+__pycache__
+*.asv
+build/
+*.csv
+data*
