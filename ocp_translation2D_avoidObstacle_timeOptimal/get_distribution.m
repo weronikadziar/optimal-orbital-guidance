@@ -1,29 +1,44 @@
 function distribution = get_distribution(data)
-% 
-% time_max = max(data(:,1));
-% time_min = min(data(:,1));
 
-state_max = [];
-state_min = [];
-for i = 1:4
-    state = data(:,1+i:4:400);
-    state_max = [state_max, max(state(:))];
-    state_min = [state_min, min(state(:))];
+% DESCRIPTION
+% Computes the means and standard deviations of all states and control inputs.
+
+% INPUTS
+% - data: dataset to analyze, array of dimension (N_jobs, 1+(nx+nu)*N)
+
+% OUTPUTS
+% - distribution: data structure with fields mean and sd 
+
+% Dimensions
+nx = 4;
+nu = 2;
+N = 100;
+
+% Compute max and min of the optimal time
+time_max = max(data(:,1));
+time_min = min(data(:,1));
+
+% Compute max and min values for each state
+state_max = zeros(1,nx);
+state_min = zeros(1,nx);
+for i = 1:nx
+    state = data(:,i+1:nx:nx*N);
+    state_max(i) = max(state(:));
+    state_min(i) = min(state(:));
 end
 
-input = data(:,402:end);
+% Compute max and min values of control inputs
+input = data(:,nx*N+2:end);
 input_max = max(input(:));
 input_min = min(input(:));
 
-% sol_max = [time_max, repmat(state_max,1,100), repmat(input_max,1,200)];
-% sol_min = [time_min, repmat(state_min,1,100), repmat(input_min,1,200)];
-sol_max = [repmat(state_max,1,100), repmat(input_max,1,200)];
-sol_min = [repmat(state_min,1,100), repmat(input_min,1,200)];
-sol_mean = sol_min;
-sol_sd = sol_max - sol_min;
+% Make an array with max and min values for each entry of data
+sol_max = [time_max, repmat(state_max,1,N), repmat(input_max,1,nu*N)];
+sol_min = [time_min, repmat(state_min,1,N), repmat(input_min,1,nu*N)];
 
+% Populate structure
 distribution = struct();
-distribution.sol_mean = sol_mean;
-distribution.sol_sd = sol_sd;
+distribution.mean = sol_min;
+distribution.sd = sol_max - sol_min;
 
 end

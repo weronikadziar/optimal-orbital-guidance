@@ -1,3 +1,10 @@
+% Create a neural network architecture and train it using the provided
+% dataset. Meant for behavioral cloning of the OCP policies. All the
+% hyperparameters can be changed in this file. The dataset should contain
+% flattened state and input trajectories. Entries 1:numInputs includes the
+% initial states and the desired final positions. The remaining entries are
+% the full state and input trajectories from the OCP solver.
+
 % Define neural network architecture
 numInputs = 6;
 numOutputs = 600;
@@ -25,7 +32,8 @@ trainOptions = trainingOptions('adam', ...
 
 % Define data and data split 
 dataStruct = struct();
-dataStruct.data = data_net;
+dataStruct.data = data; 
+dataStruct.distribution = distribution;
 dataStruct.validationSplitPercent = 0.2;
 dataStruct.testSplitPercent = 0.1;
 dataStruct.inputIndex = 1:numInputs;

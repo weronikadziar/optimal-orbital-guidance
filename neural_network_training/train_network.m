@@ -1,7 +1,11 @@
 function net = train_network(net, trainInfo, trainOptions, filename)
 
+% DESCRIPTION
+% Trains, tests and saves the neural network.
+
 disp('Initializing network training...')
 
+% Extract training, validation, and test datasets
 trainInput = trainInfo.newTrainInput;
 trainOutput = trainInfo.newTrainOutput;
 validationCellArray = trainInfo.newValidationCellArray;

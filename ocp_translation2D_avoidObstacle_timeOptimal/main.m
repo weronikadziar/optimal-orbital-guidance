@@ -1,47 +1,40 @@
-%% Define trajectory limits 
+% Generate time-optimal trajectories for orbital proximity operations using
+% 2D translation dynamics. An agent is spawned at some distance away from 
+% the target, and a random docking point is generated. The agent has to 
+% reach the docking points while avoiding collisions with the target. Apart
+% from the trajectory, the solver also finds the optimal time horizon.
+% The OCP solver is initialized using an initial guess provided by a 
+% similar OCP solver that uses all the same properties but it excludes any
+% nonconvex constraints. The convex version of the problem will always
+% converge, and the nonconvex solver will refine this solution.
+
+% Define system parameters and trajectory limits 
 params = struct();
-params.mass = 4; %4kg
-params.max_thrust = 0.5; %0.5N
-params.min_btw_agents = 5;
-params.min_to_target = 5;
-params.max_to_target_initial = 50;
-params.min_to_target_initial = 25;
-params.max_to_target_final = 10;
-params.min_to_target_final = 5;
-params.max_time = 60;
+params.filename = 'my_translation2D_avoidObstacle_timeOptimal'; % SET name for saving the dataset
+params.mass = 1;                                    % SET spacecraft mass [kg]
+params.max_thrust = 1;                              % SET maximum thrust [N]
+params.max_time = 100;                              % SET maximum time horizon [s]
+params.min_to_target = 5;                           % SET min distance to be kept from target at all times [m]
+params.max_to_target_initial = 50;                  % SET max radius from target for the initial position [m]
+params.min_to_target_initial = 25;                  % SET min radius from target for the initial position [m]
+params.max_to_target_final = 10;                    % SET max radius from target for the final position [m]
+params.min_to_target_final = 5;                     % SET min radius from target for the final position [m]
+params.max_vel_initial = 0.1;                       % SET max initial velocity [m/s]
 
-%% Create OCP objects
-ocp_free_time = ocp_translation_2D_avoid_hub_free_time(params);
-ocp_const_time = ocp_translation_2D_avoid_hub_const_time(params);
-ocp_cvx = ocp_translation_2D_convex_continuous(params);
-% ocp = ocp_translation_2D_avoid_hub_const_time(params);
+% Source the Acados environment if it's not done yet
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+    your_acados_matlab_dir = "C:\Users\Weronika\acados\examples\acados_matlab_octave"; % SET your directory with the env file
+	run(strcat(your_acados_matlab_dir,"\acados_env_variables_windows.m"))
+end
 
-%% Network training distribution
-loader = load("C:\Users\Weronika\Documents\GitHub\imitate-orbital-nmpc\matlab_functions\ocp_examples\translation_2D_avoid_hub_free_final_time\data\data_translation_2D_avoid_hub_donut_11oct.mat");
-data_1 = loader.data;
-loader = load("C:\Users\Weronika\Documents\GitHub\imitate-orbital-nmpc\matlab_functions\ocp_examples\translation_2D_avoid_hub_free_final_time\data\data_translation_2D_avoid_hub_donut_11oct_2.mat");
-data_2 = loader.data;
-%%
-loader = load("C:\Users\Weronika\Documents\GitHub\imitate-orbital-nmpc\matlab_functions\ocp_examples\translation_2D_avoid_hub_free_final_time\data\data_translation_2D_avoid_hub_donut_11oct_distribution.mat");
-dist_1 = loader.data_distribution;
-loader = load("C:\Users\Weronika\Documents\GitHub\imitate-orbital-nmpc\matlab_functions\ocp_examples\translation_2D_avoid_hub_free_final_time\data\data_translation_2D_avoid_hub_donut_11oct_2_distribution.mat");
-dist_2 = loader.data_distribution;
-data_1 = denormalize_data(data_1(:,7:end),dist_1);
-data_2 = denormalize_data(data_2(:,7:end),dist_2);
-data = [data_1; data_2];
-[~, data_distribution] = normalize_data(data,[]);
+% Create OCP objects
+ocp_timeOptimal = ocp_translation2D_avoidObstacle_timeOptimal(params);
+ocp_fuelOptimal = ocp_translation2D_avoidObstacle(params);
+ocp_cvx = ocp_translation2D_convex(params);
 
 %% Solve
-N_jobs = 10;               % SET number of paths to generate
-% [data_job, data_init, data_sol] = acados_solve(ocp_free_time, ocp_const_time, ocp_cvx, params, N_jobs);
-% [data_job, data_sol] = acados_solve_const_time(ocp, ocp_cvx, params, N_jobs);
-[data_job, data_init_ocp, data_init_net, data_init_net_ocp, data_sol_ocp, data_sol_net] = acados_solve_ocp_and_net(ocp_free_time, ocp_const_time, ocp_cvx, nn_obj, data_distribution, params, N_jobs);
+params.N_jobs = 10;               % SET number of paths to generate
+[data_job, data_sol] = acados_solve(ocp_timeOptimal, ocp_fuelOptimal, ocp_cvx, params);
+plot_paths(data_job, data_sol)
 
-
-%% Normalize and save dataset
-filename = 'data_translation_2D_avoid_hub_donut_11oct_2';      % SET the file name
-% [data_sol_norm, data_distribution] = normalize_data(data_sol,[]);
-% data = [data_job, data_sol_norm];
-% folder = fileparts(cd);
-% save(strcat(folder,'/data/',filename,'.mat'), 'data', '-v7.3')
-% save(strcat(folder,'/data/',filename,'_distribution.mat'), 'data_distribution', '-v7.3')
