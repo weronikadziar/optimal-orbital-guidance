@@ -23,7 +23,8 @@ function [data_job, data_sol] = acados_solve(ocp_timeOptimal, ocp_fuelOptimal, o
 %             desired final state is saved because the desired final 
 %             velocity is always zero, dimension (N_jobs, nx+nx/2)
 % - data_sol: array with flattened state and input trajectories of the OCP
-%             solution for all converged jobs, dimension (N_jobs, (nx+nu)*N)
+%             solution for all converged jobs, dimension 
+%             (N_jobs, nx*(N+1)+nu*N)
 
 N_jobs = params.N_jobs;             % number of paths to generate
 N = ocp.opts_struct.param_scheme_N; % number of discretization points
@@ -81,7 +82,6 @@ for job = 1:N_jobs
             conv = conv + 1;
             data_job(conv,:) = [x0; xf(1:nx/2)]';
             time = x_traj(end,1);
-            x_traj = x_traj(1:nx,2:end);
             data_sol(conv,:) = [time; x_traj(:); u_traj(:)]';
         end
     end

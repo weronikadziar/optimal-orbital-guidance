@@ -18,13 +18,13 @@ N = 100;
 state_max = zeros(1,nx);
 state_min = zeros(1,nx);
 for i = 1:nx
-    state = data(:,i:nx:nx*N);
+    state = data(:,i:nx:nx*(N+1));
     state_max(i) = max(state(:));
     state_min(i) = min(state(:));
 end
 
 % Compute max and min values of control inputs
-input = data(:,nx*N+1:end);
+input = data(:,nx*(N+1)+1:end);
 input_max = max(input(:));
 input_min = min(input(:));
 

@@ -5,11 +5,10 @@ function plot_paths(data_job, data_sol, data_net, N_agents)
 % OCP solver. Initial and desired final states and clearly marked. 
 % Collisions that occur in the initial guess are plotted.
 
-
 N = 100;
 nx = 4;
 
-i = randi(size(data_sol,1));
+i = randi(size(data_job,1));
 plt_net = reshape(data_net(i,1:nx*N_agents*N),nx*N_agents,[]);
 plt_sol = reshape(data_sol(i,1:nx*N_agents*N),nx*N_agents,[]);
 

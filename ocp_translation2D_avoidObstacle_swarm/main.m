@@ -11,7 +11,7 @@
 % Parameters
 params = struct();
 params.N_agents = 2;                                      % SET number of agents
-params.filename = 'my_translation2D_avoidObstacle_swarm'; % SET name for saving the dataset
+params.filename = 'translation2D_avoidObstacle_swarm2'; % SET name for saving the dataset
 
 % Source the Acados environment if it's not done yet
 env_run = getenv('ENV_RUN');
@@ -22,10 +22,16 @@ end
 
 % Create OCP object and load trained network and its training data distribution                   
 ocp = ocp_translation2D_avoidObstacle_swarm(params.N_agents);
-net = load("net_translation2D_avoidObstacle.mat").net;
-net_distribution = load("data_translation2D_avoidObstacle_distribution.mat").data_distribution;
+% net = load('net_translation2D_avoidObstacle.mat').net;
+net = load("C:\Users\Weronika\Documents\GitHub\imitate-orbital-nmpc\matlab_functions\neural_network\new nn\nn_obj_2d_trans_avoidhub_fulltraj_test.mat").nn_obj;
+net_distribution = load('data_distribution_translation2D_avoidObstacle.mat').net_distribution;
 
 %% Solve, save the dataset and its distribution
-params.N_jobs = 10;                                       % SET number of paths to generate
+params.save = 0;                                          % SET to 1 to save the dataset or 0 to not save it
+params.N_jobs = 20;                                       % SET number of paths to generate
 [data_job, data_sol, data_net] = acados_solve(ocp, net, net_distribution, params);
-plot_paths(data_job, data_sol, data_net, params.N_agents)
+
+% Plot some example position trajectories
+for i =1:10
+    plot_paths(data_job, data_sol, data_net, params.N_agents)
+end

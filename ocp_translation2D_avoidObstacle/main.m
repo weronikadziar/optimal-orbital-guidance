@@ -5,11 +5,14 @@
 % OCP solver is initialized using an initial guess provided by a similar
 % OCP solver that uses all the same properties but it excludes any
 % nonconvex constraints. The convex version of the problem will always
-% converge, and the nonconvex solver will refine this solution.
+% converge, and the nonconvex solver will refine this solution. To generate
+% more data faster, use the augmentation function. For each converged
+% solution, the function will generate N_aug paths around the solution by
+% using its sensitivity function.
 
 % Define system parameters and trajectory limits 
 params = struct();
-params.filename = 'my_translation2D_avoidObstacle'; % SET name for saving the dataset
+params.filename = 'test_network'; % SET name for saving the dataset
 params.mass = 1;                                    % SET spacecraft mass [kg]
 params.max_thrust = 1;                              % SET maximum thrust [N]
 params.T = 100;                                     % SET time horizon [s]
@@ -32,7 +35,9 @@ ocp = ocp_translation2D_avoidObstacle(params);
 ocp_init = ocp_translation2D_convex(params);
 
 %% Solve
-params.N_jobs = 100;                                % SET number of paths to generate
-[data_job, data_sol] = acados_solve(ocp, ocp_init, params);
+params.save = 1;                                    % SET to 1 to save the datasets, or to 0 to not save the datasets
+params.N_jobs = 100000;                                % SET number of paths to generate
+params.N_aug = 0;                                   % SET number of augmented paths to generate for each converged solution
+[data_job, data_sol, data_aug_job, data_aug_sol] = acados_solve(ocp, ocp_init, params);
 plot_paths(data_job, data_sol)
 

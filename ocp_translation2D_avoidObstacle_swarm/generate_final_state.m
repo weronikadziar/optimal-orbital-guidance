@@ -14,8 +14,8 @@ function xf = generate_final_state(N_agents)
 %       always zero, dimension (nx, N_agents)
 
 min_btw_agents = 5;             % min distance between all agents [m]
-max_to_target = 50;             % max initial distance from the target [m]
-min_to_target = 25;             % min initial distance from the target [m]
+max_to_target = 10;             % max initial distance from the target [m]
+min_to_target = 5;             % min initial distance from the target [m]
 nx = 4;                         % number of states
 N_pairs = nchoosek(N_agents,2); % number of agent pairs
 

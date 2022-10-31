@@ -22,19 +22,19 @@ time_min = min(data(:,1));
 state_max = zeros(1,nx);
 state_min = zeros(1,nx);
 for i = 1:nx
-    state = data(:,i+1:nx:nx*N);
+    state = data(:,i+1:nx:nx*(N+1));
     state_max(i) = max(state(:));
     state_min(i) = min(state(:));
 end
 
 % Compute max and min values of control inputs
-input = data(:,nx*N+2:end);
+input = data(:,nx*(N+1)+2:end);
 input_max = max(input(:));
 input_min = min(input(:));
 
 % Make an array with max and min values for each entry of data
-sol_max = [time_max, repmat(state_max,1,N), repmat(input_max,1,nu*N)];
-sol_min = [time_min, repmat(state_min,1,N), repmat(input_min,1,nu*N)];
+sol_max = [time_max, repmat(state_max,1,N+1), repmat(input_max,1,nu*N)];
+sol_min = [time_min, repmat(state_min,1,N+1), repmat(input_min,1,nu*N)];
 
 % Populate structure
 distribution = struct();

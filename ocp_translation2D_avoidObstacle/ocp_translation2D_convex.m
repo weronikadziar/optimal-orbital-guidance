@@ -40,7 +40,7 @@ constr_Jbu = eye(nu);
 constr_lbu = -params.max_thrust*ones(nu,1);
 constr_ubu = params.max_thrust*ones(nu,1);
 
-% Cost:  keep the control actions low
+% Cost: keep the control actions low
 cost_expr_y = sym_u;
 cost_W = eye(nu);
 

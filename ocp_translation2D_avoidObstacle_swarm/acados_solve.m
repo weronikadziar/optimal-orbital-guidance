@@ -19,12 +19,13 @@ function [data_job, data_sol, data_net] = acados_solve(ocp, net, net_distributio
 % - data_job: array with flattened initial states and desired final 
 %             positions for all converged jobs, only the position of the 
 %             desired final state is saved because the desired final 
-%             velocity is always zero, dimension (N_jobs, (nx+nx/2)*na)
+%             velocity is always zero, dimension (N_jobs, (nx+nx/2)*N_agents)
 % - data_sol: array with flattened state and input trajectories of the OCP
-%             solution for all converged jobs, dimension (N_jobs, (nx+nu)*N)
+%             solution for all converged jobs, dimension 
+%             (N_jobs, (nx+nu)*N*N_agents)
 % - data_net: array with flattened initial guess of the state and input
 %             trajectories provided by the neural network, dimension
-%             (N_jobs, (nx+nx/2)*na)
+%             (N_jobs, (nx+nx/2)*N_agents)
 
 N = ocp.opts_struct.param_scheme_N;     % number of discretization points
 N_jobs = params.N_jobs;                 % number of paths to generate
@@ -38,8 +39,8 @@ p = length(perm);
 
 % Allocate arrays for datasets
 data_job = zeros(N_jobs*p,nx*N_agents*1.5);
-data_sol = zeros(N_jobs*p,(nx+nu)*N_agents*N);
-data_net = zeros(N_jobs*p,(nx+nu)*N_agents*N);
+data_sol = zeros(N_jobs*p,(nx+nu)*N*N_agents);
+data_net = zeros(N_jobs*p,(nx+nu)*N*N_agents);
 
 fprintf('\nInitializing path planning...\n')
 
@@ -65,9 +66,9 @@ for job = 1:N_jobs
         init_u = zeros(nu*N_agents,N);   
         for agent = 1:N_agents
             path = predict(net, [x0(:,agent); xf(1:nx/2,agent)]');
-            path_denormalized = path.*net_distribution.sd + net_distribution.mean;
-            path_x = [x0(:,agent), reshape(path_denormalized(1:N*nx),nx,N)];
-            path_u = reshape(path_denormalized(N*nx+1:end),nu,N);
+            path_denorm = path(1,:).*net_distribution.sol_sd + net_distribution.sol_mean;
+            path_x = [x0(:,agent), reshape(path_denorm(1:N*nx),nx,N)];
+            path_u = reshape(path_denorm(N*nx+1:end),nu,N);
             init_x(1+(agent-1)*nx:agent*nx,:) = path_x;
             init_u(1+(agent-1)*nu:agent*nu,:) = path_u;
         end
@@ -85,12 +86,12 @@ for job = 1:N_jobs
         % If solution converged, save it to the dataset
         if status == 0
             conv = conv + 1;
-            xf_pos = xf(1:nx/2,:);
-            data_job(conv,:) = [x0(:); xf_pos(:)]';
-            x_traj_sol = x_traj(:,2:end);
-            data_sol(conv,:) = [x_traj_sol(:); u_traj(:)]';
-            init_x_flat = init_x(:);
-            data_net(conv,:) = [init_x_flat(nx*N_agents+1:end);init_u(:)]';
+            xf = xf(1:nx/2,:);
+            data_job(conv,:) = [x0(:); xf(:)]';
+            x_traj = x_traj(:,2:end);
+            data_sol(conv,:) = [x_traj(:); u_traj(:)]';
+            init_x = init_x(:,2:end);
+            data_net(conv,:) = [init_x(:); init_u(:)]';
         end
 
     end
@@ -109,14 +110,18 @@ toc
 data_job = data_job(1:conv,:);
 data_sol = data_sol(1:conv,:);
 data_net = data_net(1:conv,:);
-data = [data_job, data_sol];
 
-% Calculate solution data distribution (needed for network training)
-data_distribution = get_distribution(data_sol,N_agents);
+if params.save == 1
 
-% Save dataset and its distribution
-save(strcat('data_',params.filename,'.mat'), 'data', '-v7.3')
-save(strcat('net_',params.filename,'_distribution.mat'), 'data_distribution', '-v7.3')
+    % Calculate solution data distribution (needed for network training)
+    data_distribution = get_distribution(data_sol,N_agents);
+    
+    % Save dataset and its distribution
+    data = [data_job, data_sol];
+    save(strcat(fileparts(cd),'\neural_network_training\data\data_',params.filename,'.mat'), 'data', '-v7.3')
+    save(strcat(fileparts(cd),'\neural_network_training\data\data_distribution_',params.filename,'.mat'), 'data_distribution', '-v7.3')
+
+end
 
 end
 

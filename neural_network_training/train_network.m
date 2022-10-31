@@ -26,6 +26,6 @@ testRMSE = sqrt(sum(mean((testDataOutput - predictedTestDataOutput).^2)));
 fprintf('Test Data RMSE = %.2f\n', testRMSE);
 
 % Save neural network object
-save(filename,'net')
+save(strcat('neural_network_objects/',filename),'net')
 
 end
